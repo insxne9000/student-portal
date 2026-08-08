@@ -24,6 +24,10 @@ const gradeSchema = new mongoose.Schema({
   totalClasses: {
     type: Number,
     default: 0
+  },
+  released: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 

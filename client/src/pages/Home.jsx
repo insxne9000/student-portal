@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 function Home() {
     const [dashboard, setDashboard] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchDashboard = async () => {
@@ -39,28 +41,36 @@ function Home() {
     }
 
     return (
-        <main className="px-10 py-8">
-            <div className="w-full max-w-[1014px] h-[333px] bg-gradient-to-r from-[#510443] to-[#870873] rounded-[40px] p-12 flex justify-between items-center shadow-xl mx-auto mt-4">
+        <main className="px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+            <div className="w-full max-w-[1014px] rounded-[32px] bg-gradient-to-r from-[#510443] to-[#870873] px-6 py-8 shadow-xl sm:px-8 lg:px-12 lg:py-10 mx-auto mt-4 flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-col text-white">
-                    <h1 className="text-5xl font-semibold mb-6 tracking-wide">
-                        Welcome back {dashboard.welcome.name} !
+                    <h1
+                        className="mb-4 text-3xl font-semibold tracking-wide sm:text-4xl lg:text-[2.2rem]"
+                        style={{ fontFamily: 'Times New Roman, serif' }}
+                    >
+                        Welcome back, {dashboard.welcome.name}
                     </h1>
-                    <div className="space-y-1 text-white/90 text-lg">
+
+                    <div className="space-y-1 text-base text-white/90 sm:text-lg">
                         <p>Matric No: {dashboard.welcome.matricNo}</p>
                         <p>{dashboard.welcome.level}</p>
-                        <p>Programme : {dashboard.welcome.programme}</p>
-                        <p>Admission Type : {dashboard.welcome.admissionType}</p>
+                        <p>Programme: {dashboard.welcome.programme}</p>
+                        <p>Admission Type: {dashboard.welcome.admissionType}</p>
                     </div>
-                    <button className="mt-8 bg-white/20 backdrop-blur-sm border border-white/40 hover:bg-white/30 text-white w-fit px-8 py-3 rounded-full font-medium transition-colors shadow-sm">
-                        View profile
+
+                    <button
+                        onClick={() => navigate('/profile')}
+                        className="mt-6 w-fit rounded-full border border-white/40 bg-white/20 px-5 py-2.5 text-sm font-medium text-white shadow-sm backdrop-blur-sm transition-colors hover:bg-white/30 sm:px-6"
+                    >
+                        View Profile
                     </button>
                 </div>
 
-                <div className="w-[220px] h-[220px] rounded-full border-4 border-white/20 overflow-hidden shadow-2xl flex-shrink-0">
+                <div className="mx-auto h-[180px] w-[180px] overflow-hidden rounded-full border-4 border-white/20 shadow-2xl sm:h-[210px] sm:w-[210px] lg:mx-0 lg:h-[220px] lg:w-[220px] flex-shrink-0">
                     <img
                         src={dashboard.welcome.profileImage}
                         alt="Profile"
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                     />
                 </div>
             </div>
@@ -94,7 +104,7 @@ function Home() {
                             <span className="font-bold">{dashboard.academicOverview.creditsCompleted} / {dashboard.academicOverview.creditsRequired}</span>
                         </div>
                         <div className="w-full bg-gray-200 h-2 rounded-full overflow-hidden">
-                            <div 
+                            <div
                                 className="bg-purple-600 h-full rounded-full transition-all duration-1000"
                                 style={{ width: `${Math.min((dashboard.academicOverview.creditsCompleted / dashboard.academicOverview.creditsRequired) * 100, 100)}%` }}
                             ></div>
@@ -102,22 +112,40 @@ function Home() {
                     </div>
                 </div>
 
-                <div className="bg-[#680659]/10 rounded-[20px] p-6 shadow-sm flex flex-col h-[323px]">
-                    <span className="bg-orange-200 text-orange-800 text-xs font-bold px-3 py-1 rounded-full w-fit mb-2">Clearance</span>
-                    <h3 className="font-semibold text-lg text-gray-800">Clearance status</h3>
-                    <p className="text-5xl font-bold text-orange-400 my-4">{dashboard.clearance.completed}/{dashboard.clearance.total}</p>
-                    <p className="text-sm text-gray-600 mb-4 border-b border-gray-300 pb-2">Departments cleared</p>
-                    <div className="space-y-2 mt-auto text-sm font-medium text-gray-700">
-                        {dashboard.clearance.items.map((item) => (
-                            <div key={item.label} className="flex justify-between items-center">
-                                <span>{item.label}</span>
-                                <span className={`px-2 py-0.5 rounded text-xs ${item.status === 'Done' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-500'}`}>
-                                    {item.status}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
+                <div className="bg-[#680659]/10 rounded-[20px] p-6 shadow-sm flex flex-col min-h-[323px]">
+    <span className="bg-orange-200 text-orange-800 text-xs font-bold px-3 py-1 rounded-full w-fit mb-2">
+        Clearance
+    </span>
+
+    <h3 className="font-semibold text-lg text-gray-800">Clearance status</h3>
+
+    <p className="text-5xl font-bold text-orange-400 my-4">
+        {dashboard.clearance.completed}/{dashboard.clearance.total}
+    </p>
+
+    <p className="text-sm text-gray-600 mb-4 border-b border-gray-300 pb-2">
+        Departments cleared
+    </p>
+
+    <div className="space-y-3 mt-4 text-sm font-medium text-gray-700 max-h-[190px] overflow-y-auto pr-1">
+        {dashboard.clearance.items.map((item) => (
+            <div key={item.label} className="flex justify-between items-start gap-3">
+                <span className="flex-1 leading-snug break-words">
+                    {item.label}
+                </span>
+                <span
+                    className={`px-2 py-1 rounded text-xs whitespace-nowrap ${
+                        item.status === 'Approved' || item.status === 'Done'
+                            ? 'bg-green-100 text-green-600'
+                            : 'bg-red-100 text-red-500'
+                    }`}
+                >
+                    {item.status}
+                </span>
+            </div>
+        ))}
+    </div>
+</div>
 
                 <div className="bg-[#680659]/10 rounded-[20px] p-6 shadow-sm flex flex-col h-[323px]">
                     <span className="bg-green-200 text-green-800 text-xs font-bold px-3 py-1 rounded-full w-fit mb-2">Academic</span>

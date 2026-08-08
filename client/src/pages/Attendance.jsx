@@ -1,56 +1,76 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
+
+const demoAttendance = [
+    {
+        _id: 'demo-1',
+        semesterLabel: 'Year 4 - 2nd Sem',
+        courseId: { courseCode: 'CSC 422', title: 'Human-Computer Interaction', credits: 2 },
+        classesAttended: 11,
+        totalClasses: 12,
+    },
+    {
+        _id: 'demo-2',
+        semesterLabel: 'Year 4 - 2nd Sem',
+        courseId: { courseCode: 'CSC 404', title: 'Data Management Systems', credits: 3 },
+        classesAttended: 9,
+        totalClasses: 12,
+    },
+    {
+        _id: 'demo-3',
+        semesterLabel: 'Year 4 - 2nd Sem',
+        courseId: { courseCode: 'CSC 499', title: 'Final Year Project', credits: 6 },
+        classesAttended: 8,
+        totalClasses: 10,
+    },
+];
 
 function Attendance() {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
-    const [selectedSemester, setSelectedSemester] = useState("Year 1 - 1st Sem");
+    const [selectedSemester, setSelectedSemester] = useState('Year 4 - 2nd Sem');
+    const [isDemoView, setIsDemoView] = useState(false);
 
     const allSemesters = [
-        "Year 1 - 1st Sem",
-        "Year 1 - 2nd Sem",
-        "Year 2 - 1st Sem",
-        "Year 2 - 2nd Sem",
-        "Year 3 - 1st Sem",
-        "Year 3 - 2nd Sem",
-        "Year 4 - 1st Sem",
-        "Year 4 - 2nd Sem"
+        'Year 1 - 1st Sem',
+        'Year 1 - 2nd Sem',
+        'Year 2 - 1st Sem',
+        'Year 2 - 2nd Sem',
+        'Year 3 - 1st Sem',
+        'Year 3 - 2nd Sem',
+        'Year 4 - 1st Sem',
+        'Year 4 - 2nd Sem',
     ];
 
     useEffect(() => {
         const fetchAttendance = async () => {
             try {
-                const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-                const token = localStorage.getItem('token');
-                
-                // Fetch results (which includes Grades with attendance data)
-                const response = await axios.get(`${apiBaseUrl}/api/student/results`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const response = await axios.get('/api/student/attendance');
+                const fetchedCourses = response.data.grades || [];
 
-                if (response.data.locked) {
-                    setError("Your records are withheld pending payment approval from the administration.");
+                if (response.data.demo || fetchedCourses.length === 0) {
+                    setCourses(demoAttendance);
+                    setSelectedSemester('Year 4 - 2nd Sem');
+                    setIsDemoView(true);
                 } else {
-                    const fetchedCourses = response.data.grades || [];
                     setCourses(fetchedCourses);
-                    
-                    // Auto-select the latest semester if available
-                    if (fetchedCourses.length > 0) {
-                        const labels = fetchedCourses.map(g => g.semesterLabel);
-                        const uniqueLabels = [...new Set(labels)];
-                        if (uniqueLabels.length > 0) {
-                            setSelectedSemester(uniqueLabels[uniqueLabels.length - 1]);
-                        }
+                    const labels = fetchedCourses.map((g) => g.semesterLabel);
+                    const uniqueLabels = [...new Set(labels)];
+                    if (uniqueLabels.length > 0) {
+                        setSelectedSemester(uniqueLabels[uniqueLabels.length - 1]);
                     }
+                    setIsDemoView(false);
                 }
             } catch (err) {
-                setError('Failed to fetch attendance records.');
+                setCourses(demoAttendance);
+                setSelectedSemester('Year 4 - 2nd Sem');
+                setIsDemoView(true);
             } finally {
                 setLoading(false);
             }
         };
+
         fetchAttendance();
     }, []);
 
@@ -59,42 +79,47 @@ function Attendance() {
         return Math.round((attended / total) * 100);
     };
 
-    if (loading) return <div className="p-20 text-center text-gray-500 font-medium">Loading attendance records...</div>;
-    
-    if (error) return (
-        <main className="flex flex-col min-h-[calc(100vh-80px)] bg-[#f4f7f6] p-10">
-            <div className="bg-red-50 text-red-500 p-8 rounded-2xl border border-red-200 text-center shadow-sm max-w-2xl mx-auto mt-10">
-                <AlertCircle size={48} className="mx-auto mb-4 opacity-50" />
-                <h3 className="text-xl font-bold mb-2">Access Denied</h3>
-                <p>{error}</p>
-            </div>
-        </main>
-    );
+    if (loading) {
+        return <div className="p-20 text-center text-gray-500 font-medium">Loading attendance records...</div>;
+    }
 
-    const filteredCourses = courses.filter(g => g.semesterLabel === selectedSemester);
+    const filteredCourses = courses.filter((g) => g.semesterLabel === selectedSemester);
 
     return (
         <main className="flex flex-col min-h-[calc(100vh-80px)] bg-[#f4f7f6]">
-            <div className="flex-grow px-10 py-10 max-w-[1000px] mx-auto w-full">
-                
-                <div className="flex justify-between items-end mb-10">
+            <div className="flex-grow px-4 py-6 sm:px-6 lg:px-10 lg:py-10 max-w-[1000px] mx-auto w-full">
+                <div className="flex flex-col gap-5 md:flex-row md:justify-between md:items-end mb-10">
                     <div>
                         <h1 className="text-3xl font-black text-[#510443] mb-2">Class Attendance</h1>
-                        <p className="text-gray-500 font-medium tracking-wide">Monitor your course attendance and meet the required thresholds.</p>
+                        <p className="text-gray-500 font-medium tracking-wide">
+                            Monitor your class attendance without waiting for payment approval.
+                        </p>
                     </div>
-                    <div className="flex flex-col items-end">
+                    <div className="flex flex-col items-start md:items-end">
                         <label className="text-sm font-bold text-gray-600 mb-1">Select Semester</label>
-                        <select 
-                            className="bg-white border border-gray-300 text-gray-800 text-sm font-semibold rounded-lg focus:ring-[#781763] focus:border-[#781763] block p-2.5 outline-none shadow-sm min-w-[200px]"
+                        <select
+                            className="bg-white border border-gray-300 text-gray-800 text-sm font-semibold rounded-lg focus:ring-[#781763] focus:border-[#781763] block p-2.5 outline-none shadow-sm min-w-[220px]"
                             value={selectedSemester}
                             onChange={(e) => setSelectedSemester(e.target.value)}
                         >
-                            {allSemesters.map(sem => (
+                            {allSemesters.map((sem) => (
                                 <option key={sem} value={sem}>{sem}</option>
                             ))}
                         </select>
                     </div>
                 </div>
+
+                {isDemoView && (
+                    <div className="mb-6 flex items-start gap-3 rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4 text-sm text-blue-800">
+                        <Info size={18} className="mt-0.5 flex-shrink-0" />
+                        <div>
+                            <p className="font-bold">Demo attendance view enabled</p>
+                            <p>
+                                Live attendance records are not yet fully synced for this student account, so a sample attendance overview is displayed immediately after login.
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {filteredCourses.length === 0 ? (
                     <div className="bg-white p-12 rounded-2xl text-center border border-gray-200 shadow-sm">
@@ -106,24 +131,24 @@ function Attendance() {
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {filteredCourses.map(g => {
+                        {filteredCourses.map((g) => {
                             const percent = calculatePercentage(g.classesAttended, g.totalClasses);
-                            const isPassing = percent >= 70; // 70% requirement
-                            
+                            const isPassing = percent >= 70;
+
                             return (
                                 <div key={g._id} className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm flex flex-col">
-                                    <div className="flex justify-between items-start mb-4">
+                                    <div className="flex justify-between items-start mb-4 gap-4">
                                         <div>
                                             <h3 className="font-bold text-gray-900 text-lg mb-1">{g.courseId?.courseCode}</h3>
-                                            <p className="text-gray-500 text-sm line-clamp-1">{g.courseId?.title}</p>
+                                            <p className="text-gray-500 text-sm line-clamp-2">{g.courseId?.title}</p>
                                         </div>
                                         <span className="bg-gray-100 text-gray-600 font-bold text-xs px-3 py-1 rounded-full uppercase tracking-wider whitespace-nowrap">
                                             {g.semesterLabel}
                                         </span>
                                     </div>
-                                    
+
                                     <div className="flex-grow flex flex-col justify-end mt-4">
-                                        <div className="flex justify-between items-end mb-2">
+                                        <div className="flex justify-between items-end mb-2 gap-4">
                                             <div>
                                                 <p className="text-sm font-medium text-gray-500 mb-1">Classes Attended</p>
                                                 <p className="font-black text-2xl text-gray-800">
@@ -136,15 +161,14 @@ function Attendance() {
                                                 </p>
                                             </div>
                                         </div>
-                                        
-                                        {/* Progress Bar */}
+
                                         <div className="w-full bg-gray-100 rounded-full h-2.5 overflow-hidden">
-                                            <div 
-                                                className={`h-2.5 rounded-full transition-all duration-1000 ${isPassing ? 'bg-green-500' : 'bg-red-500'}`} 
+                                            <div
+                                                className={`h-2.5 rounded-full transition-all duration-1000 ${isPassing ? 'bg-green-500' : 'bg-red-500'}`}
                                                 style={{ width: `${percent}%` }}
                                             ></div>
                                         </div>
-                                        
+
                                         {g.totalClasses > 0 && percent < 70 && (
                                             <p className="text-xs text-red-500 font-bold mt-3 flex items-center gap-1">
                                                 <AlertCircle size={12} /> Warning: Attendance below 70% threshold

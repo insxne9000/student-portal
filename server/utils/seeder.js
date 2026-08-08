@@ -9,7 +9,7 @@ const defaultDashboard = {
   welcome: { name: "Ahmed Adewole", matricNo: "2022/502", level: "Level 400", programme: "Computer Science", admissionType: "UTME", profileImage: "/assets/profile.jpg" },
   complaints: { total: 4, pending: 2, resolved: 1 },
   registration: { session: "2025/26", status: "Approved", unitsRegistered: 21, maxUnits: 24 },
-  clearance: { completed: 4, total: 6, items: [ { label: "Library", status: "Done" }, { label: "Bursary", status: "Pending" }, { label: "HOD", status: "Pending" } ] },
+  clearance: { completed: 4, total: 6, items: [ { label: "Bursar Clearance", status: "Approved" }, { label: "Examination Clearance", status: "Approved" }, { label: "Library Clearance", status: "Approved" }, { label: "Departmental Clearance", status: "Pending" }, { label: "Student Affairs Clearance", status: "Approved" }, { label: "Hostel Clearance", status: "Pending" } ] },
   semester: { label: "2nd", stage: "400L", week: 4, totalWeeks: 12, examStarts: "May 12" },
   documents: { total: 2, items: [ { label: "Transcript", status: "Processing" }, { label: "Intro letter", status: "Ready" } ] },
   disciplinary: { status: "Clean", warnings: 0, suspensionHistory: "None", standing: "Good standing" },
@@ -195,7 +195,7 @@ export const seedDatabase = async () => {
         },
         complaints: { total: 0, pending: 0, resolved: 0 },
         registration: { session: "2025/26", status: "Approved", unitsRegistered: 15, maxUnits: 24 },
-        clearance: { completed: 4, total: 6, items: [ { label: "Library", status: "Done" }, { label: "Bursary", status: "Pending" } ] },
+        clearance: { completed: 4, total: 6, items: [ { label: "Bursar Clearance", status: "Approved" }, { label: "Examination Clearance", status: "Approved" }, { label: "Library Clearance", status: "Approved" }, { label: "Departmental Clearance", status: "Pending" }, { label: "Student Affairs Clearance", status: "Approved" }, { label: "Hostel Clearance", status: "Pending" } ] },
         semester: { label: data.semesterLabel, stage: data.stage, week: 4, totalWeeks: 12, examStarts: "May 12" },
         documents: { total: 2, items: [ { label: "Transcript", status: "Processing" } ] },
         disciplinary: { status: "Clean", warnings: 0, suspensionHistory: "None", standing: "Good standing" }
@@ -239,7 +239,9 @@ export const seedDatabase = async () => {
           semester: 1, // Year 1, Sem 1
           status: 'pending',
           lineItems: [{ courseCode: "School Fees", amount: 150000 }],
-          totalAmountDue: 150000
+          totalAmountDue: 150000,
+          amountPaid: 0,
+          paymentHistory: []
         });
 
         // Complaint for Ahmed

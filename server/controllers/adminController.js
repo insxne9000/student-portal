@@ -133,6 +133,7 @@ export const uploadGrade = async (req, res) => {
       gradeDoc.score = numericScore;
       gradeDoc.grade = letterGrade;
       gradeDoc.passed = isNowPassed;
+      gradeDoc.released = true;
     } else {
        // Re-evaluate existing grade if only attendance was updated
        if (gradeDoc.score !== undefined && attendancePercent < 0.70) {
@@ -161,21 +162,20 @@ export const uploadGrade = async (req, res) => {
 export const approvePayment = async (req, res) => {
   try {
     const { id, invoiceId } = req.params;
-    const invoice = await Invoice.findOneAndUpdate(
-      { _id: invoiceId, studentId: id },
-      { status: 'paid' },
-      { new: true }
-    );
+    const invoice = await Invoice.findOne({ _id: invoiceId, studentId: id });
     if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+
+    invoice.status = 'paid';
+    invoice.amountPaid = invoice.totalAmountDue;
+    if (!Array.isArray(invoice.paymentHistory)) invoice.paymentHistory = [];
+    await invoice.save();
 
     // Generate Grade records for the newly paid courses if they don't exist
     const enrollment = await Enrollment.findById(invoice.enrollmentId);
     if (enrollment && enrollment.selectedCourses) {
-      const student = await Student.findById(id);
       const semesterLabel = `Year ${Math.ceil(invoice.semester / 2)} - ${invoice.semester % 2 === 0 ? '2nd' : '1st'} Sem`;
 
       for (const courseId of enrollment.selectedCourses) {
-        // Only create if it doesn't already exist to avoid duplicates
         const existingGrade = await Grade.findOne({ studentId: id, courseId, semesterLabel });
         if (!existingGrade) {
           await Grade.create({
@@ -183,7 +183,8 @@ export const approvePayment = async (req, res) => {
             courseId,
             semesterLabel,
             classesAttended: 0,
-            totalClasses: 0
+            totalClasses: 0,
+            released: false,
           });
         }
       }
