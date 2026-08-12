@@ -5,6 +5,7 @@ const complaintSchema = new mongoose.Schema({
   ticketId: { type: String, required: true, unique: true },
   title: { type: String, required: true },
   description: { type: String, required: true },
+  adminResponse: { type: String, default: '' },
   status: { type: String, enum: ['pending', 'answered', 'resolved'], default: 'pending' }
 }, { timestamps: true });
 

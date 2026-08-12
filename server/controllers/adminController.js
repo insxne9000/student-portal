@@ -289,3 +289,135 @@ export const promoteSemester = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+export const getAllComplaints = async (req, res) => {
+  try {
+    const complaints = await Complaint.find()
+      .populate('studentId', 'name matricNo degree')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ complaints });
+  } catch (error) {
+    console.error("Error fetching all complaints:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const answerComplaint = async (req, res) => {
+  try {
+    const { complaintId } = req.params;
+    const { responseText, markResolved } = req.body;
+
+    const complaint = await Complaint.findById(complaintId);
+    if (!complaint) return res.status(404).json({ message: "Complaint not found" });
+
+    if (responseText !== undefined) {
+      complaint.adminResponse = responseText;
+    }
+
+    if (markResolved) {
+      complaint.status = 'resolved';
+    } else {
+      complaint.status = 'answered';
+    }
+
+    await complaint.save();
+    res.json({ message: "Complaint updated successfully", complaint });
+  } catch (error) {
+    console.error("Error answering complaint:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getAllInvoices = async (req, res) => {
+  try {
+    const invoices = await Invoice.find()
+      .populate('studentId', 'name matricNo degree')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json({ invoices });
+  } catch (error) {
+    console.error("Error fetching all invoices:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const getAllClearances = async (req, res) => {
+  try {
+    const dashboards = await Dashboard.find()
+      .populate('studentId', 'name matricNo degree batch')
+      .lean();
+    
+    const clearances = dashboards.map(d => ({
+      dashboardId: d._id,
+      student: d.studentId || { name: d.welcome?.name, matricNo: d.welcome?.matricNo, degree: d.welcome?.programme },
+      studentId: d.studentId?._id || d.studentId,
+      clearance: d.clearance || { completed: 0, total: 6, items: [] }
+    }));
+
+    res.json({ clearances });
+  } catch (error) {
+    console.error("Error fetching clearances:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const updateStudentClearance = async (req, res) => {
+  try {
+    const { id } = req.params; // studentId or dashboardId
+    const { label, status } = req.body; // status: 'Approved' | 'Pending'
+
+    let dashboard = await Dashboard.findOne({ studentId: id });
+    if (!dashboard) {
+      dashboard = await Dashboard.findById(id);
+    }
+    if (!dashboard) return res.status(404).json({ message: "Dashboard record not found" });
+
+    if (!dashboard.clearance) {
+      dashboard.clearance = { completed: 0, total: 6, items: [] };
+    }
+
+    const itemIndex = dashboard.clearance.items.findIndex(i => i.label.toLowerCase() === label.toLowerCase());
+    if (itemIndex > -1) {
+      dashboard.clearance.items[itemIndex].status = status;
+    } else {
+      dashboard.clearance.items.push({ label, status });
+    }
+
+    dashboard.clearance.completed = dashboard.clearance.items.filter(i => i.status === 'Approved').length;
+    dashboard.clearance.total = dashboard.clearance.items.length;
+
+    await dashboard.save();
+    res.json({ message: "Clearance status updated", clearance: dashboard.clearance });
+  } catch (error) {
+    console.error("Error updating student clearance:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const addCourse = async (req, res) => {
+  try {
+    const { courseCode, title, credits, level, semester, remarks, degree, fee } = req.body;
+    if (!courseCode || !title || !credits || !level || !semester) {
+      return res.status(400).json({ message: "Missing required course fields." });
+    }
+
+    const newCourse = new Course({
+      courseCode,
+      title,
+      credits: Number(credits),
+      level: Number(level),
+      semester: Number(semester),
+      remarks: remarks || "Core",
+      degree: degree || "Computer Science",
+      fee: fee ? Number(fee) : 0
+    });
+
+    await newCourse.save();
+    res.status(201).json({ message: "Course created successfully", course: newCourse });
+  } catch (error) {
+    console.error("Error creating course:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+

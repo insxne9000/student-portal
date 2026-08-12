@@ -282,11 +282,61 @@ function AdminStudentDetails() {
         </div>
     );
 
+    const [studentClearance, setStudentClearance] = useState([
+        { label: "Bursar Clearance", status: "Approved" },
+        { label: "Examination Clearance", status: "Approved" },
+        { label: "Library Clearance", status: "Approved" },
+        { label: "Departmental Clearance", status: "Pending" },
+        { label: "Student Affairs Clearance", status: "Approved" },
+        { label: "Hostel Clearance", status: "Pending" }
+    ]);
+
+    const handleToggleClearance = async (label, currentStatus) => {
+        const newStatus = currentStatus === 'Approved' ? 'Pending' : 'Approved';
+        try {
+            await axios.put(`/api/admin/students/${id}/clearance`, { label, status: newStatus });
+            setStudentClearance(prev => prev.map(item => item.label === label ? { ...item, status: newStatus } : item));
+        } catch (err) {
+            alert("Failed to update clearance.");
+        }
+    };
+
+    const renderClearance = () => (
+        <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <h3 className="font-bold text-gray-800 mb-4 text-lg">Departmental Clearance Checkpoints</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                {studentClearance.map((item, idx) => {
+                    const isApproved = item.status === 'Approved';
+                    return (
+                        <div key={idx} className="border border-gray-200 rounded-xl p-4 flex flex-col justify-between bg-gray-50">
+                            <div>
+                                <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded uppercase mb-2 ${isApproved ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}`}>
+                                    {item.status}
+                                </span>
+                                <h4 className="font-bold text-gray-900 text-sm">{item.label}</h4>
+                            </div>
+                            <button
+                                onClick={() => handleToggleClearance(item.label, item.status)}
+                                className={`mt-4 w-full py-2 rounded text-xs font-bold transition-colors cursor-pointer ${
+                                    isApproved 
+                                    ? 'bg-amber-100 text-amber-800 hover:bg-amber-200' 
+                                    : 'bg-green-600 text-white hover:bg-green-700'
+                                }`}
+                            >
+                                {isApproved ? 'Revoke Approval' : 'Approve Clearance'}
+                            </button>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+
     return (
         <div className="max-w-5xl mx-auto pb-20">
             <button 
                 onClick={() => navigate('/admin')}
-                className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors mb-6 font-medium text-sm"
+                className="flex items-center gap-2 text-gray-500 hover:text-gray-900 transition-colors mb-6 font-medium text-sm cursor-pointer"
             >
                 <ArrowLeft size={16} /> Back to Directory
             </button>
@@ -313,11 +363,11 @@ function AdminStudentDetails() {
 
             {/* Tabs */}
             <div className="flex gap-2 mb-6 border-b border-gray-200">
-                {['academics', 'payments', 'tickets'].map(tab => (
+                {['academics', 'payments', 'tickets', 'clearance'].map(tab => (
                     <button
                         key={tab}
                         onClick={() => setActiveTab(tab)}
-                        className={`px-6 py-3 font-bold text-sm uppercase tracking-wider transition-colors border-b-2 ${
+                        className={`px-6 py-3 font-bold text-sm uppercase tracking-wider transition-colors border-b-2 cursor-pointer ${
                             activeTab === tab 
                             ? 'border-red-600 text-red-600' 
                             : 'border-transparent text-gray-500 hover:text-gray-800'
@@ -333,6 +383,7 @@ function AdminStudentDetails() {
                 {activeTab === 'academics' && renderAcademics()}
                 {activeTab === 'payments' && renderPayments()}
                 {activeTab === 'tickets' && renderTickets()}
+                {activeTab === 'clearance' && renderClearance()}
             </div>
         </div>
     );

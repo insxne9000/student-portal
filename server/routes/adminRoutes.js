@@ -1,5 +1,19 @@
 import express from 'express';
-import { recommendCourses, getAllStudents, getStudentDetails, uploadGrade, approvePayment, clearComplaint, promoteSemester } from '../controllers/adminController.js';
+import { 
+  recommendCourses, 
+  getAllStudents, 
+  getStudentDetails, 
+  uploadGrade, 
+  approvePayment, 
+  clearComplaint, 
+  promoteSemester,
+  getAllComplaints,
+  answerComplaint,
+  getAllInvoices,
+  getAllClearances,
+  updateStudentClearance,
+  addCourse
+} from '../controllers/adminController.js';
 import { resolveComplaint } from '../controllers/complaintController.js';
 
 const router = express.Router();
@@ -15,7 +29,15 @@ router.use((req, res, next) => {
 router.post('/recommend-courses', recommendCourses);
 router.put('/complaints/:id/status', resolveComplaint);
 
-// Admin Portal Routes
+// Global Admin Management Routes
+router.get('/complaints', getAllComplaints);
+router.put('/complaints/:complaintId/answer', answerComplaint);
+router.get('/invoices', getAllInvoices);
+router.get('/clearances', getAllClearances);
+router.put('/students/:id/clearance', updateStudentClearance);
+router.post('/courses', addCourse);
+
+// Admin Student Registry Routes
 router.get('/students', getAllStudents);
 router.get('/students/:id', getStudentDetails);
 router.post('/students/:id/grades/:gradeId', uploadGrade);
